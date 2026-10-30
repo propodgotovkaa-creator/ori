@@ -15,5 +15,7 @@ test('spider contact includes a falling spider and rejects a near miss',()=>{
  assert.ok(touches(b,116,375,26,30));
  assert.ok(touches(b,155,420,26,30));
  assert.equal(touches(b,190,420,26,30),false);
- assert.equal(new Set(SPIDER_POSITIONS).size,5);assert.ok(PHRASES[0].includes('Лы-лы-лы'));
+ assert.equal(new Set(SPIDER_POSITIONS).size,6);assert.ok(PHRASES[0].includes('Лы-лы-лы'));
 });
+
+test('every supplied tongue twister has an encounter',()=>{assert.equal(PHRASES.length,6);assert.equal(SPIDER_POSITIONS.length,PHRASES.length);assert.equal(new Set(PHRASES).size,6);assert.ok(PHRASES[5].includes('на цветке пчела'));});

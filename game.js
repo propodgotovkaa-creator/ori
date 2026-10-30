@@ -1,4 +1,4 @@
-import {Spiders,touches} from './encounters.js';
+import {Spiders,touches} from './encounters.js?v=2';
 import {WORDS,RULES as R,newSession,validSession,collect,completeCard,chunkAt} from './core.js';
 import {PANELS,PANEL_STEP,PANEL_WIDTH,panelAt,groundAt,connector,crystalsFor} from './scenery.js';
 const $=id=>document.getElementById(id);
@@ -44,11 +44,11 @@ window.addEventListener('blur',autoPause);document.addEventListener('visibilityc
 class Forest extends Phaser.Scene {
  constructor(){super('Forest');}
  preload(){scene=this;this.failed=[];this.load.on('progress',n=>$('progress').value=n);this.load.on('loaderror',file=>this.failed.push(file.key));
-   this.load.image('spider','assets/spider/spider.png');this.load.image('cocoon','assets/spider/cocoon.png');
-   this.load.image('hero','assets/character/hero.png');this.load.json('metrics','assets/metrics.json');
+   this.load.image('spider','assets/spider/spider-v2.png');this.load.image('cocoon','assets/spider/cocoon.png');
+   this.load.image('hero','assets/character/hero.png');this.load.json('metrics','assets/metrics.json?v=2');
    PANELS.forEach((p,i)=>this.load.image(`panel${i}`,`assets/forest/soft/${p.file}.png`));
    this.load.image('root','assets/forest/soft/root.png');
-   for(const [key,path] of Object.entries({tree:'forest/tree',ground:'platforms/ground',branch:'platforms/branch',crystal:'crystals/crystal',flower:'effects/flower'}))this.load.image(key,`assets/${path}.png`);
+   for(const [key,path] of Object.entries({tree:'forest/tree',ground:'platforms/ground',branch:'platforms/branch',crystal:'crystals/crystal-v2',flower:'effects/flower'}))this.load.image(key,`assets/${path}.png`);
    for(const w of WORDS)this.load.image(w,`assets/words/${w}.png`);
    for(const a of ['music','step','jump','land','near','collect','card','finale'])this.load.audio(a,`assets/audio/${a}.wav`);
  }
@@ -84,7 +84,7 @@ class Forest extends Phaser.Scene {
      }
      owned.push(art);
      for(const c of crystalsFor(n))if(!session.collected.includes(c.id)){
-       const art=this.add.image(c.x,c.y,'crystal','trim').setDisplaySize(34,56).setDepth(4);
+       const art=this.add.image(c.x,c.y,'crystal','trim').setDisplaySize(40,64).setDepth(4);
        const entry={id:c.id,panel:n,x:c.x,baseY:c.y,art};this.crystals.push(entry);owned.push(art);
      }
      this.chunks.set(n,owned);
@@ -125,7 +125,7 @@ class Forest extends Phaser.Scene {
    this.setHero(frame,time);this.lastX=this.player.x;this.lastBottom=body.bottom;
    if(grounded&&Math.abs(body.velocity.x)>65&&time-this.stepAt>220){playSound('step',.09);this.stepAt=time;}
    if(Math.abs(body.velocity.x)>60&&time-this.trailAt>100){this.burst(this.player.x-facing*20,this.player.y+15,1);this.trailAt=time;}
-   let near=null;for(const c of this.crystals){const d=Phaser.Math.Distance.Between(this.player.x,this.player.y,c.x,c.baseY);c.art.y=c.baseY+(reduced?0:Math.sin(time*.002+c.id)*6);c.art.setScale((34/this.metrics.assets.crystal.w)*(d<R.reach?1.13:1)*(1+.035*Math.sin(time*.003)),56/this.metrics.assets.crystal.h);if(d<R.reach)near=c;}
+   let near=null;for(const c of this.crystals){const d=Phaser.Math.Distance.Between(this.player.x,this.player.y,c.x,c.baseY);c.art.y=c.baseY+(reduced?0:Math.sin(time*.002+c.id)*6);c.art.setScale((40/this.metrics.assets.crystal.w)*(d<R.reach?1.13:1)*(1+.035*Math.sin(time*.003)),64/this.metrics.assets.crystal.h);if(d<R.reach)near=c;}
    $('hint').hidden=true;
    this.interact();
    if(mode==='playing')this.spiders.update(dt,body);

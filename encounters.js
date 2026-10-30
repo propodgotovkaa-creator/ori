@@ -1,7 +1,7 @@
 import {groundAt} from './scenery.js';
-// Replace this list when the complete speech material is ready.
-export const PHRASES=['Лы-лы-лы — вымыли полы'];
-export const SPIDER_POSITIONS=[680,1900,3130,4380,5540];
+// Speech material supplied by the parent.
+export const PHRASES=['Лы-лы-лы — вымыли полы','Ло-ло-ло — в лодке сломано весло','Ло-ло-ло — всё на улице бело','Ал-ал-ал — Павел днём не спал','Ел-ел-ел — дятел прилетел','Ла-ла-ла — на цветке пчела'];
+export const SPIDER_POSITIONS=[680,1900,3130,4380,5540,5850];
 export function touches(body,x,y,halfWidth=13,halfHeight=21){return body.right>=x-halfWidth&&body.left<=x+halfWidth&&body.bottom>=y-halfHeight&&body.top<=y+halfHeight;}
 const clamp=n=>Math.max(0,Math.min(1,n));
 const ease=n=>{n=clamp(n);return n*n*(3-2*n);};
@@ -22,23 +22,28 @@ export class Spiders {
    if(p.phase==='wrap'||p.phase==='cocoon'||p.phase==='release'){
     const h=this.scene.player;const cx=h.x,cy=h.body.bottom-36;
     if(p.phase==='wrap'){
-     const progress=clamp(p.t/2);x=cx+Math.cos(p.t*9)*48;p.y=cy-45+Math.sin(p.t*9)*24;
+     const progress=clamp(p.t/2.8),settle=ease(p.t/.45),weave=Math.sin(p.t*8)*(1-ease((progress-.8)/.2));
+     x=p.catchX+(cx+12+weave*10-p.catchX)*settle;p.y=p.catchY+(cy-61+Math.cos(p.t*8)*3*(1-progress)-p.catchY)*settle;
      this.cocoon.setPosition(cx,cy-9).setAlpha(progress*.92);
      this.scene.hero.setAlpha(1-progress*.62);
      this.silk.lineStyle(1.3,0xf0ffff,.8);this.silk.beginPath();
      for(let j=0;j<progress*240;j++){const a=j*.23,wx=cx+Math.cos(a)*37,wy=cy+29-j*.27+Math.sin(a)*8;if(j===0)this.silk.moveTo(wx,wy);else this.silk.lineTo(wx,wy);}this.silk.strokePath();
-     this.silk.lineBetween(x,p.y,cx+Math.cos(p.t*9)*34,cy);
+     // The working strand leaves the front feet and joins the newest wrap.
+     const a=progress*240*.23,tipX=cx+Math.cos(a)*37,tipY=cy+29-progress*240*.27+Math.sin(a)*8;
+     this.silk.lineBetween(x-8,p.y+32,tipX,tipY);
+     this.silk.lineBetween(x+10,p.y+30,cx+21,cy-28);
+     this.cocoon.setRotation(weave*.014);
      if(progress===1){p.phase='cocoon';p.t=0;this.onReady(PHRASES[p.id%PHRASES.length]);}
-    }else if(p.phase==='cocoon'){x=cx+48;p.y=cy-83+Math.sin(this.clock*2)*4;this.cocoon.setRotation(Math.sin(this.clock*1.7)*.035);}
-    else {const q=ease(p.t/1.3);x=cx+48;p.y=cy-83-(cy+120)*q;this.cocoon.setAlpha((1-q)*.92).setRotation(q*.24);this.cocoon.setDisplaySize(91+q*45,137+q*22);this.scene.hero.setAlpha(.38+q*.62);if(p.t>1.3){p.phase='gone';this.active=null;this.cocoon.setAlpha(0).setRotation(0).setDisplaySize(91,137);this.onFree(p.id);}}
+    }else if(p.phase==='cocoon'){const sway=Math.sin(this.clock*1.7);x=cx+12+sway*2;p.y=cy-61+sway*2;this.cocoon.setRotation(sway*.025);this.silk.lineStyle(1.2,0xf0ffff,.8);this.silk.lineBetween(x-8,p.y+32,cx-10,cy-24);this.silk.lineBetween(x+10,p.y+30,cx+21,cy-28);}
+    else {const q=ease(p.t/1.3);x=cx+12;p.y=cy-61-(cy+120)*q;this.silk.lineStyle(1.1,0xf0ffff,(1-q)*.7);this.silk.lineBetween(x,p.y+32,cx,cy-30);this.cocoon.setAlpha((1-q)*.92).setRotation(q*.24);this.cocoon.setDisplaySize(91+q*45,137+q*22);this.scene.hero.setAlpha(.38+q*.62);if(p.t>1.3){p.phase='gone';this.active=null;this.cocoon.setAlpha(0).setRotation(0).setDisplaySize(91,137);this.onFree(p.id);}}
    }
    p.art.setPosition(x,p.y).setRotation(Math.sin(this.clock*2+p.id)*.07);
-   p.art.setFrame(String(p.phase==='wrap'?2:[0,1,0,3][Math.floor(this.clock*5)%4]));
+   p.art.setFrame(String(p.phase==='wrap'?2:p.phase==='cocoon'?3:[0,1,0,1][Math.floor(this.clock*3)%4]));
    p.art.setDisplaySize(112+Math.sin(this.clock*3)*2,112+Math.cos(this.clock*3)*3);
    p.art.setVisible(p.phase!=='gone'&&p.phase!=='waiting');
    if(p.art.visible){this.web.lineStyle(1.2,0xf0ffff,.72);this.web.beginPath();this.web.moveTo(p.x,-10);this.web.lineTo(x,p.y-32);this.web.strokePath();}
    if(!this.active&&(p.phase==='descend'||p.phase==='hang')&&touches(body,x,p.y,26,30)){
-    this.active=p;p.phase='wrap';p.t=0;this.onCatch();break;
+    this.active=p;p.catchX=x;p.catchY=p.y;p.phase='wrap';p.t=0;this.onCatch();break;
    }
   }
  }
