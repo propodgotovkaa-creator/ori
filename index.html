@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ru">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#193f3a"><title>Хранитель волшебного леса</title><link rel="stylesheet" href="style.css?v=4"></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#193f3a"><title>Хранитель волшебного леса</title><link rel="stylesheet" href="style.css?v=5"></head>
 <body>
 <main id="stage" aria-label="Хранитель волшебного леса">
   <div id="game" aria-label="Игровой лес"></div>
@@ -11,14 +11,14 @@
   <section id="card" class="veil card-veil" role="dialog" aria-modal="true" aria-label="Назови картинку" hidden><div class="word-card"><p class="eyebrow">НАЗОВИ, ЧТО ТЫ ВИДИШЬ</p><div class="picture-halo"><img id="word" alt="Картинка для называния" draggable="false"></div><button id="continue" class="primary">Продолжить</button><p class="note">Произнеси слово. Взрослый поможет продолжить.</p></div></section>
   <section id="caught" class="speech-card firefly-card" role="dialog" aria-modal="true" aria-labelledby="spider-title" hidden>
     <p class="eyebrow">ОГОНЁК ПОМОЖЕТ РАСПУТАТЬ ПАУТИНКУ</p><h2 id="spider-title">Проведи светлячка</h2>
-    <div class="syllables" role="group" aria-label="Выбери слог"><button data-syllable="ЛА" aria-pressed="true">ЛА</button><button data-syllable="ЛО" aria-pressed="false">ЛО</button><button data-syllable="ЛУ" aria-pressed="false">ЛУ</button></div>
-    <div class="web-trail">
+    <p class="memory-syllable">На каждом шаге говори <strong id="trial-syllable">ЛО</strong></p>
+    <div class="web-trail"><svg id="memory-threads" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"></svg>
     <img class="trail-cocoon" src="assets/spider/cocoon.png" alt="Кокон хранителя"><div id="trail-nodes"></div><span id="firefly" aria-hidden="true"><img src="assets/firefly/firefly.png" alt=""></span></div>
-    <p id="trail-status" aria-live="polite"></p><p class="note">Выбери любой слог. Произноси его на каждом шаге.<br>Взрослый слушает и помогает — игра не проверяет голос.</p>
+    <p id="trail-status" tabindex="-1" aria-live="polite"></p><button id="trail-repeat" class="quiet">Показать путь ещё раз</button><p class="note">Запомни огоньки, затем повтори их порядок.<br>Взрослый слушает и помогает — игра не проверяет голос.</p>
   </section>
   <section id="paused" class="veil" role="dialog" aria-modal="true" aria-label="Пауза" hidden><div class="intro"><p class="eyebrow">МОЖНО НЕМНОГО ОТДОХНУТЬ</p><h2>Лес подождёт</h2><button id="resume" class="primary">Продолжить</button><button id="back-menu" class="quiet">В главное меню</button></div></section>
   <section id="finish" class="veil finish-veil" role="dialog" aria-modal="true" aria-label="Путешествие завершено" hidden><div class="intro"><p class="eyebrow">ВСЕ 11 КРИСТАЛЛОВ СОБРАНЫ</p><h2>Волшебное путешествие<br>завершено!</h2><p>Лес снова полон света.<br>Спасибо маленькому хранителю и тебе!</p><button id="again" class="primary">Играть ещё</button><button id="finish-menu" class="quiet">В главное меню</button></div></section>
   <nav id="touch" aria-label="Управление" hidden><div><button data-action="left" aria-label="Идти влево">←</button><button data-action="right" aria-label="Идти вправо">→</button></div><div><button data-action="jump" aria-label="Прыжок">↑</button></div></nav>
 </main>
-<script src="vendor/phaser.min.js"></script><script type="module" src="game.js?v=4"></script>
+<script src="vendor/phaser.min.js"></script><script type="module" src="game.js?v=5"></script>
 </body></html>

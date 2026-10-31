@@ -1,5 +1,5 @@
-import {FireflyTrial} from './firefly.js?v=4';
-import {Spiders,touches} from './encounters.js?v=3';
+import {FireflyTrial} from './firefly.js?v=5';
+import {Spiders,touches} from './encounters.js?v=5';
 import {WORDS,RULES as R,newSession,validSession,collect,completeCard,chunkAt} from './core.js';
 import {PANELS,PANEL_STEP,PANEL_WIDTH,panelAt,groundAt,connector,crystalsFor} from './scenery.js';
 const $=id=>document.getElementById(id);
@@ -61,7 +61,7 @@ class Forest extends Phaser.Scene {
    this.player=this.add.zone(session.x,session.y,32,53);this.physics.add.existing(this.player);this.player.body.setGravityY(0).setMaxVelocity(R.speed,1000).setDragX(1500);
    this.hero=this.add.image(session.x,session.y,'hero','4').setDepth(5);
    this.ensureChunks(panelAt(session.x));
-   this.spiders=new Spiders(this,Array.isArray(session.spidersCleared)?session.spidersCleared:[],()=>{this.player.body.setVelocity(0,0).setAcceleration(0,0);ui('wrapping');},()=>{this.trial.reset();ui('caught');document.querySelector('[data-syllable]').focus({preventScroll:true});},id=>{session.spidersCleared=[...new Set([...(session.spidersCleared||[]),id])];this.hero.setAlpha(1);this.lastX=this.player.x;this.lastBottom=this.player.body.bottom;this.recordPosition();ui('playing');});
+   this.spiders=new Spiders(this,Array.isArray(session.spidersCleared)?session.spidersCleared:[],()=>{this.player.body.setVelocity(0,0).setAcceleration(0,0);ui('wrapping');},id=>{this.trial.reset(id);ui('caught');$('trail-status').focus({preventScroll:true});},id=>{session.spidersCleared=[...new Set([...(session.spidersCleared||[]),id])];this.hero.setAlpha(1);this.lastX=this.player.x;this.lastBottom=this.player.body.bottom;this.recordPosition();ui('playing');});
    this.trial=new FireflyTrial($('caught'),{active:()=>mode==='caught',onStep:()=>playSound('near',.18),onComplete:()=>{ui('releasing');this.spiders.release();playSound('collect',.24);this.burst(this.player.x,this.player.y,24);}});
    this.cameras.main.setBounds(0,0,100000000,720);this.cameras.main.startFollow(this.player,true,.075,.075, -190,0);this.cameras.main.setDeadzone(75,720);this.cameras.main.scrollX=Math.max(0,session.x-450);
    this.checkpoint={x:session.x,y:session.y};this.lastX=session.x;this.lastBottom=session.y+26.5;this.grounded=false;

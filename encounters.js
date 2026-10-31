@@ -31,7 +31,7 @@ export class Spiders {
      this.silk.lineBetween(x-8,p.y+32,tipX,tipY);
      this.silk.lineBetween(x+10,p.y+30,cx+21,cy-28);
      this.cocoon.setRotation(weave*.014);
-     if(progress===1){p.phase='cocoon';p.t=0;this.onReady();}
+     if(progress===1){p.phase='cocoon';p.t=0;this.onReady(p.id);}
     }else if(p.phase==='cocoon'){const sway=Math.sin(this.clock*1.7);x=cx+12+sway*2;p.y=cy-61+sway*2;this.cocoon.setRotation(sway*.025);this.silk.lineStyle(1.2,0xf0ffff,.8);this.silk.lineBetween(x-8,p.y+32,cx-10,cy-24);this.silk.lineBetween(x+10,p.y+30,cx+21,cy-28);}
     else {const q=ease(p.t/1.3);x=cx+12;p.y=cy-61-(cy+120)*q;this.silk.lineStyle(1.1,0xf0ffff,(1-q)*.7);this.silk.lineBetween(x,p.y+32,cx,cy-30);this.cocoon.setAlpha((1-q)*.92).setRotation(q*.24);this.cocoon.setDisplaySize(91+q*45,137+q*22);this.scene.hero.setAlpha(.38+q*.62);if(p.t>1.3){p.phase='gone';this.active=null;this.cocoon.setAlpha(0).setRotation(0).setDisplaySize(91,137);this.onFree(p.id);}}
    }
