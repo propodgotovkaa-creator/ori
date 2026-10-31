@@ -1,4 +1,5 @@
-import {Spiders,touches} from './encounters.js?v=2';
+import {FireflyTrial} from './firefly.js?v=4';
+import {Spiders,touches} from './encounters.js?v=3';
 import {WORDS,RULES as R,newSession,validSession,collect,completeCard,chunkAt} from './core.js';
 import {PANELS,PANEL_STEP,PANEL_WIDTH,panelAt,groundAt,connector,crystalsFor} from './scenery.js';
 const $=id=>document.getElementById(id);
@@ -22,7 +23,7 @@ $('start').onclick=()=>begin();$('fresh').onclick=()=>begin(true);
 $('continue').onclick=()=>{if(mode!=='card')return;if(completeCard(session)){save();scene.celebrate();}else{save();ui('playing');}};
 $('pause').onclick=()=>{if(['playing','wrapping','caught','releasing'].includes(mode)){resumeMode=mode;scene.recordPosition();ui('paused');$('resume').focus();}};
 $('resume').onclick=()=>{ui(resumeMode);music();};
-$('release').onclick=()=>{if(mode==='caught'){ui('releasing');scene.spiders.release();playSound('collect',.24);scene.burst(scene.player.x,scene.player.y,24);}};$('back-menu').onclick=()=>showMenu();$('again').onclick=()=>begin(true);$('finish-menu').onclick=()=>{ui('menu');$('start').textContent='Новое путешествие';$('fresh').hidden=true;};
+$('back-menu').onclick=()=>showMenu();$('again').onclick=()=>begin(true);$('finish-menu').onclick=()=>{ui('menu');$('start').textContent='Новое путешествие';$('fresh').hidden=true;};
 $('music').onclick=()=>{musicOn=!musicOn;$('music').setAttribute('aria-pressed',String(musicOn));music();};
 $('sfx').onclick=()=>{sfxOn=!sfxOn;$('sfx').setAttribute('aria-pressed',String(sfxOn));};
 function action(key){if(mode!=='playing')return;if(key==='jump')scene.jumpAt=scene.time.now;}
@@ -60,7 +61,8 @@ class Forest extends Phaser.Scene {
    this.player=this.add.zone(session.x,session.y,32,53);this.physics.add.existing(this.player);this.player.body.setGravityY(0).setMaxVelocity(R.speed,1000).setDragX(1500);
    this.hero=this.add.image(session.x,session.y,'hero','4').setDepth(5);
    this.ensureChunks(panelAt(session.x));
-   this.spiders=new Spiders(this,Array.isArray(session.spidersCleared)?session.spidersCleared:[],()=>{this.player.body.setVelocity(0,0).setAcceleration(0,0);ui('wrapping');},phrase=>{ui('caught');$('phrase').textContent=phrase;$('release').focus({preventScroll:true});},id=>{session.spidersCleared=[...new Set([...(session.spidersCleared||[]),id])];this.hero.setAlpha(1);this.lastX=this.player.x;this.lastBottom=this.player.body.bottom;this.recordPosition();ui('playing');});
+   this.spiders=new Spiders(this,Array.isArray(session.spidersCleared)?session.spidersCleared:[],()=>{this.player.body.setVelocity(0,0).setAcceleration(0,0);ui('wrapping');},()=>{this.trial.reset();ui('caught');document.querySelector('[data-syllable]').focus({preventScroll:true});},id=>{session.spidersCleared=[...new Set([...(session.spidersCleared||[]),id])];this.hero.setAlpha(1);this.lastX=this.player.x;this.lastBottom=this.player.body.bottom;this.recordPosition();ui('playing');});
+   this.trial=new FireflyTrial($('caught'),{active:()=>mode==='caught',onStep:()=>playSound('near',.18),onComplete:()=>{ui('releasing');this.spiders.release();playSound('collect',.24);this.burst(this.player.x,this.player.y,24);}});
    this.cameras.main.setBounds(0,0,100000000,720);this.cameras.main.startFollow(this.player,true,.075,.075, -190,0);this.cameras.main.setDeadzone(75,720);this.cameras.main.scrollX=Math.max(0,session.x-450);
    this.checkpoint={x:session.x,y:session.y};this.lastX=session.x;this.lastBottom=session.y+26.5;this.grounded=false;
    this.motes=[];for(let i=0;i<(reduced?12:35);i++){const d=this.add.circle(Math.random()*1280,80+Math.random()*500,1+Math.random()*1.5,0xfff4b8,.65).setScrollFactor(0).setDepth(6);this.motes.push({d,x:d.x,y:d.y,phase:Math.random()*7});}
@@ -96,7 +98,7 @@ class Forest extends Phaser.Scene {
  burst(x,y,n=8){if(reduced)n=Math.min(5,n);for(let i=0;i<n;i++){const d=this.add.circle(x,y,1+Math.random()*2,0xdffff5,.85).setDepth(8);this.tweens.add({targets:d,x:x+(Math.random()-.5)*110,y:y-15-Math.random()*75,alpha:0,scale:0,duration:650+Math.random()*450,onComplete:()=>d.destroy()});}}
  celebrate(){ui('celebrating');this.player.body.setVelocity(0,0);this.player.body.setAcceleration(0,0);this.celebrationAt=this.time.now;playSound('finale',.45);const flower=this.add.image(this.player.x+140,groundAt(this.player.x+140),'flower','trim').setOrigin(.5,1).setDisplaySize(180,210).setDepth(4);flower.setScale(0);const m=this.metrics.assets.flower;this.tweens.add({targets:flower,scaleX:180/m.w,scaleY:210/m.h,duration:1800,ease:'Sine.easeOut'});this.burst(this.player.x,this.player.y,40);this.time.delayedCall(2800,()=>{ui('finish');$('again').focus();});}
  update(time,delta){if(!this.player)return;const dt=Math.min(delta,32)/1000;const cam=this.cameras.main.scrollX;
-   if(['wrapping','caught','releasing'].includes(mode)){this.spiders.update(dt,this.player.body);return;}
+   if(['wrapping','caught','releasing'].includes(mode)){this.spiders.update(dt,this.player.body);this.trial.tick(dt*1000);return;}
    if(mode!=='playing'&&mode!=='celebrating'){return;}
    for(const m of this.motes){m.d.x=(m.x-cam*.6+time*.006+100000)%1350-35;m.d.y=m.y+(reduced?0:Math.sin(time*.0005+m.phase)*24);m.d.alpha=.25+Math.sin(time*.001+m.phase)*.2;}
    if(mode==='celebrating'){this.setHero(5,time);this.hero.y-=Math.abs(Math.sin((time-this.celebrationAt)/230))*22;return;}

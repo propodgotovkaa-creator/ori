@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {touches,SPIDER_POSITIONS,PHRASES} from '../encounters.js';
+import {touches,SPIDER_POSITIONS} from '../encounters.js';
 import {crystalsFor,groundAt} from '../scenery.js';
 test('ground crystals touch walking body; aerial crystals require jumping',()=>{
  for(let i=0;i<5;i++)for(const c of crystalsFor(i)){
@@ -15,7 +15,6 @@ test('spider contact includes a falling spider and rejects a near miss',()=>{
  assert.ok(touches(b,116,375,26,30));
  assert.ok(touches(b,155,420,26,30));
  assert.equal(touches(b,190,420,26,30),false);
- assert.equal(new Set(SPIDER_POSITIONS).size,6);assert.ok(PHRASES[0].includes('Лы-лы-лы'));
+ assert.equal(new Set(SPIDER_POSITIONS).size,6);
 });
 
-test('every supplied tongue twister has an encounter',()=>{assert.equal(PHRASES.length,6);assert.equal(SPIDER_POSITIONS.length,PHRASES.length);assert.equal(new Set(PHRASES).size,6);assert.ok(PHRASES[5].includes('на цветке пчела'));});
