@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ru">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#193f3a"><title>Хранитель волшебного леса</title><link rel="stylesheet" href="style.css?v=8"></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#193f3a"><title>Хранитель волшебного леса</title><link rel="stylesheet" href="style.css?v=9"></head>
 <body>
 <main id="stage" aria-label="Хранитель волшебного леса">
   <div id="game" aria-label="Игровой лес"></div>
@@ -18,8 +18,34 @@
     <p id="trail-status" tabindex="-1" aria-live="polite"></p><button id="trail-repeat" class="quiet">Показать путь ещё раз</button><p class="note">Запомни огоньки, затем повтори их порядок.<br>Взрослый слушает и помогает — игра не проверяет голос.</p>
   </section>
   <section id="paused" class="veil" role="dialog" aria-modal="true" aria-label="Пауза" hidden><div class="intro"><p class="eyebrow">МОЖНО НЕМНОГО ОТДОХНУТЬ</p><h2>Лес подождёт</h2><button id="resume" class="primary">Продолжить</button><button id="back-menu" class="quiet">В главное меню</button></div></section>
-  <section id="finish" class="veil finish-veil" role="dialog" aria-modal="true" aria-label="Путешествие завершено" hidden><div class="intro"><p class="eyebrow">ВСЕ 11 КРИСТАЛЛОВ СОБРАНЫ</p><h2>Волшебное путешествие<br>завершено!</h2><p>Лес снова полон света.<br>Спасибо маленькому хранителю и тебе!</p><button id="again" class="primary">Играть ещё</button><button id="finish-menu" class="quiet">В главное меню</button></div></section>
+  <div id="homecoming" aria-hidden="true" hidden>
+    <img class="home-background" src="assets/ending/home-dark.png" alt="">
+    <img class="home-background home-lit" src="assets/ending/home-lit.png" alt="">
+    <div class="home-door-glow"></div>
+    <div class="home-hero"></div><img class="home-farewell" src="assets/ending/farewell.png" alt="">
+    <img class="home-crystal" src="assets/crystals/crystal-v3.png" alt="">
+    <img class="home-crystal" src="assets/crystals/crystal-v3.png" alt="">
+    <img class="home-crystal" src="assets/crystals/crystal-v3.png" alt="">
+    <img class="home-crystal" src="assets/crystals/crystal-v3.png" alt="">
+    <img class="home-crystal" src="assets/crystals/crystal-v3.png" alt="">
+    <img class="home-crystal" src="assets/crystals/crystal-v3.png" alt="">
+    <img class="home-crystal" src="assets/crystals/crystal-v3.png" alt="">
+    <img class="home-crystal" src="assets/crystals/crystal-v3.png" alt="">
+    <img class="home-crystal" src="assets/crystals/crystal-v3.png" alt="">
+    <img class="home-crystal" src="assets/crystals/crystal-v3.png" alt="">
+    <img class="home-crystal" src="assets/crystals/crystal-v3.png" alt="">
+    <img class="home-firefly" src="assets/firefly/firefly.png" alt="">
+    <img class="home-firefly" src="assets/firefly/firefly.png" alt="">
+    <img class="home-firefly" src="assets/firefly/firefly.png" alt="">
+    <img class="home-firefly" src="assets/firefly/firefly.png" alt="">
+    <img class="home-firefly" src="assets/firefly/firefly.png" alt="">
+    <img class="home-firefly" src="assets/firefly/firefly.png" alt="">
+    <img class="home-firefly" src="assets/firefly/firefly.png" alt="">
+    <img class="home-firefly" src="assets/firefly/firefly.png" alt="">
+    <img class="home-firefly" src="assets/firefly/firefly.png" alt="">
+  </div>
+  <section id="finish" class="veil finish-veil" role="dialog" aria-modal="true" aria-label="Путешествие завершено" hidden><div class="home-message"><p class="eyebrow">ПУТЕШЕСТВИЕ ЗАВЕРШЕНО</p><h2>Свет вернулся<br>домой.</h2><p class="home-thanks">Спасибо тебе!</p><button id="again" class="primary">Новое путешествие</button><button id="finish-menu" class="quiet">В главное меню</button></div></section>
   <nav id="touch" aria-label="Управление" hidden><div><button data-action="left" aria-label="Идти влево">←</button><button data-action="right" aria-label="Идти вправо">→</button><button data-action="jump" aria-label="Прыжок">↑</button></div></nav>
 </main>
-<script src="vendor/phaser.min.js"></script><script type="module" src="game.js?v=8"></script>
+<script src="vendor/phaser.min.js"></script><script type="module" src="game.js?v=9"></script>
 </body></html>

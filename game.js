@@ -1,3 +1,4 @@
+import {Homecoming} from './ending.js?v=9';
 import {crystalPlan,recycleCrystals} from './crystal-cycle.js?v=6';
 import {FireflyTrial} from './firefly.js?v=7';
 import {Spiders,touches} from './encounters.js?v=7';
@@ -13,7 +14,7 @@ const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
 function save(){try{sessionStorage.setItem(STORE,JSON.stringify(session));}catch{}}
 function focusGame(){const canvas=document.querySelector('#game canvas');if(canvas){canvas.tabIndex=0;canvas.focus({preventScroll:true});}}
 function clearInput(){held.clear();if(scene){scene.jumpAt=-Infinity;scene.player?.body.setAccelerationX(0);scene.player?.body.setVelocityX(0);}}
-function ui(next){mode=next;clearInput();if(next==='playing')requestAnimationFrame(focusGame);for(const id of ['menu','card','paused','finish','caught'])$(id).hidden=id!==next;$('hud').hidden=next==='menu'||next==='loading';$('touch').hidden=next!=='playing';$('hint').hidden=true;$('crystal-flight').hidden=!['revealing','card'].includes(next);$('crystal-flight').disabled=next!=='card';$('crystal-flight').classList.toggle('revealed',next==='card');if(scene){if(next==='playing'||next==='celebrating'){scene.physics.resume();scene.tweens.resumeAll();}else{scene.physics.pause();if(next==='wrapping'||next==='caught'||next==='releasing')scene.tweens.resumeAll();else scene.tweens.pauseAll();}}}
+function ui(next){mode=next;clearInput();if(next==='playing')requestAnimationFrame(focusGame);for(const id of ['menu','card','paused','finish','caught'])$(id).hidden=id!==next;$('hud').hidden=['menu','loading','celebrating','finish'].includes(next);$('homecoming').hidden=!['celebrating','finish'].includes(next);$('touch').hidden=next!=='playing';$('hint').hidden=true;$('crystal-flight').hidden=!['revealing','card'].includes(next);$('crystal-flight').disabled=next!=='card';$('crystal-flight').classList.toggle('revealed',next==='card');if(scene){if(next==='playing'){scene.physics.resume();scene.tweens.resumeAll();}else{scene.physics.pause();if(next==='wrapping'||next==='caught'||next==='releasing')scene.tweens.resumeAll();else scene.tweens.pauseAll();}}}
 function count(){$('count').textContent=`${session.collected.length} / 11`;}
 function openCard(){ui('card');$('word').src=`assets/words/${session.deck[session.pending]}.png`;const ball=$('crystal-flight');ball.style.left='50%';ball.style.top='50%';ball.style.setProperty('--orb-size','36cqw');ball.style.opacity='1';ball.style.transform='translate(-50%,-50%)';ball.focus({preventScroll:true});}
 
@@ -66,8 +67,10 @@ class Forest extends Phaser.Scene {
    this.cameras.main.setBounds(0,0,100000000,720);this.cameras.main.startFollow(this.player,true,.075,.075, -190,0);this.cameras.main.setDeadzone(75,720);this.cameras.main.scrollX=Math.max(0,session.x-450);
    this.checkpoint={x:session.x,y:session.y};this.lastX=session.x;this.lastBottom=session.y+26.5;this.grounded=false;
    this.motes=[];for(let i=0;i<(reduced?12:35);i++){const d=this.add.circle(Math.random()*1280,80+Math.random()*500,1+Math.random()*1.5,0xfff4b8,.65).setScrollFactor(0).setDepth(6);this.motes.push({d,x:d.x,y:d.y,phase:Math.random()*7});}
+   this.homecoming=new Homecoming($('homecoming'),{reduced,onComplete:()=>{ui('finish');$('again').focus({preventScroll:true});}});
    $('loading').hidden=true;count();
    if(this.game.registry.get('started')){ui('playing');if(session.pending!==null)openCard();}else{this.game.registry.set('started',true);showMenu();}
+   if(new URLSearchParams(location.search).get('ending')==='1'&&new URLSearchParams(location.search).has('test')&&!this.game.registry.get('endingPreviewed')){this.game.registry.set('endingPreviewed',true);this.celebrate();}
    if(new URLSearchParams(location.search).has('test'))window.__forest={scene:this,get session(){return session;},get mode(){return mode;},start:begin,collect:id=>{const c=this.crystals.find(c=>c.id===id);if(c){this.player.setPosition(c.x,c.baseY+25);this.player.body.reset(c.x,c.baseY+25);this.interact();}},teleport:(x,y)=>{this.ensureChunks(panelAt(x));this.player.body.reset(x,y);}};
  }
  ensureChunks(center){
@@ -93,13 +96,13 @@ class Forest extends Phaser.Scene {
  revealCard(x,y){$('word').src=`assets/words/${session.deck[session.pending]}.png`;this.orb={x:(x-this.cameras.main.scrollX)/R.width*100,y:y/R.height*100,elapsed:0};ui('revealing');this.drawOrb(0);}
  drawOrb(ms){const o=this.orb;o.elapsed+=ms;const t=Math.min(1,Math.max(0,(o.elapsed-300)/850)),q=t*t*(3-2*t);const ball=$('crystal-flight');ball.style.left=(o.x+(50-o.x)*q)+'%';ball.style.top=(o.y+(50-o.y)*q-Math.sin(t*Math.PI)*12)+'%';ball.style.setProperty('--orb-size',(3+q*33)+'cqw');ball.style.opacity=String(Math.min(1,o.elapsed/160));ball.style.transform=`translate(-50%,-50%) scale(${.7+.3*Math.min(1,o.elapsed/300)})`;if(o.elapsed>=1350){this.orb=null;openCard();}}
  burst(x,y,n=8){if(reduced)n=Math.min(5,n);for(let i=0;i<n;i++){const d=this.add.circle(x,y,1+Math.random()*2,0xdffff5,.85).setDepth(8);this.tweens.add({targets:d,x:x+(Math.random()-.5)*110,y:y-15-Math.random()*75,alpha:0,scale:0,duration:650+Math.random()*450,onComplete:()=>d.destroy()});}}
- celebrate(){ui('celebrating');this.player.body.setVelocity(0,0);this.player.body.setAcceleration(0,0);this.celebrationAt=this.time.now;const flower=this.add.image(this.player.x+140,groundAt(this.player.x+140),'flower','trim').setOrigin(.5,1).setDisplaySize(180,210).setDepth(4);flower.setScale(0);const m=this.metrics.assets.flower;this.tweens.add({targets:flower,scaleX:180/m.w,scaleY:210/m.h,duration:1800,ease:'Sine.easeOut'});this.burst(this.player.x,this.player.y,40);this.time.delayedCall(2800,()=>{ui('finish');$('again').focus();});}
+ celebrate(){ui('celebrating');this.player.body.setVelocity(0,0).setAcceleration(0,0);this.homecoming.start();}
  update(time,delta){if(!this.player)return;const dt=Math.min(delta,32)/1000;const cam=this.cameras.main.scrollX;
+   if(mode==='celebrating'||mode==='finish'){this.homecoming.tick(dt*1000);return;}
    if(mode==='revealing'){this.drawOrb(dt*1000);return;}
    if(['wrapping','caught','releasing'].includes(mode)){this.spiders.update(dt,this.player.body);this.trial.tick(dt*1000);return;}
    if(mode!=='playing'&&mode!=='celebrating'){return;}
    for(const m of this.motes){m.d.x=(m.x-cam*.6+time*.006+100000)%1350-35;m.d.y=m.y+(reduced?0:Math.sin(time*.0005+m.phase)*24);m.d.alpha=.25+Math.sin(time*.001+m.phase)*.2;}
-   if(mode==='celebrating'){this.setHero(5,time);this.hero.y-=Math.abs(Math.sin((time-this.celebrationAt)/230))*22;return;}
    const body=this.player.body;
    let floor=groundAt(body.center.x),grounded=false;
    const previousFloor=groundAt(this.lastX),wasGrounded=this.grounded;
