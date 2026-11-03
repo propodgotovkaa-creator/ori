@@ -1,6 +1,6 @@
 import {crystalPlan,recycleCrystals} from './crystal-cycle.js?v=6';
-import {FireflyTrial} from './firefly.js?v=6';
-import {Spiders,touches} from './encounters.js?v=5';
+import {FireflyTrial} from './firefly.js?v=7';
+import {Spiders,touches} from './encounters.js?v=7';
 import {WORDS,RULES as R,newSession,validSession,collect,completeCard,chunkAt} from './core.js';
 import {PANELS,PANEL_STEP,PANEL_WIDTH,panelAt,groundAt,connector,crystalsFor} from './scenery.js';
 const $=id=>document.getElementById(id);
@@ -43,10 +43,10 @@ class Forest extends Phaser.Scene {
  constructor(){super('Forest');}
  preload(){scene=this;this.failed=[];this.load.on('progress',n=>$('progress').value=n);this.load.on('loaderror',file=>this.failed.push(file.key));
    this.load.image('spider','assets/spider/spider-v2.png');this.load.image('cocoon','assets/spider/cocoon.png');
-   this.load.image('hero','assets/character/hero.png');this.load.json('metrics','assets/metrics.json?v=2');
+   this.load.image('hero','assets/character/hero.png');this.load.json('metrics','assets/metrics.json?v=7');
    PANELS.forEach((p,i)=>this.load.image(`panel${i}`,`assets/forest/soft/${p.file}.png`));
    this.load.image('root','assets/forest/soft/root.png');
-   for(const [key,path] of Object.entries({tree:'forest/tree',ground:'platforms/ground',branch:'platforms/branch',crystal:'crystals/crystal-v2',flower:'effects/flower'}))this.load.image(key,`assets/${path}.png`);
+   for(const [key,path] of Object.entries({tree:'forest/tree',ground:'platforms/ground',branch:'platforms/branch',crystal:'crystals/crystal-v3',flower:'effects/flower'}))this.load.image(key,`assets/${path}.png`);
    for(const w of WORDS)this.load.image(w,`assets/words/${w}.png`);
  }
  create(){scene=this;if(this.failed.length){$('load-status').textContent='Не удалось загрузить часть игры. Проверьте соединение и обновите страницу.';console.error('Missing assets',this.failed);return;}
@@ -58,7 +58,7 @@ class Forest extends Phaser.Scene {
    this.hero=this.add.image(session.x,session.y,'hero','4').setDepth(5);
    this.crystalPlan=crystalPlan(session.crystalPositions);
    this.recycleCrystals();
-   for(const c of this.crystalPlan)if(!session.collected.includes(c.id)){const art=this.add.image(c.x,c.y,'crystal','trim').setDisplaySize(40,64).setDepth(4);this.crystals.push({id:c.id,x:c.x,baseY:c.y,art});}
+   for(const c of this.crystalPlan)if(!session.collected.includes(c.id)){const art=this.add.image(c.x,c.y,'crystal','trim').setDisplaySize(44,72).setDepth(4);this.crystals.push({id:c.id,x:c.x,baseY:c.y,art});}
    this.ensureChunks(panelAt(session.x));
    this.spiders=new Spiders(this,Array.isArray(session.spidersCleared)?session.spidersCleared:[],()=>{this.player.body.setVelocity(0,0).setAcceleration(0,0);ui('wrapping');},id=>{this.trial.reset(id);ui('caught');$('trail-status').focus({preventScroll:true});},id=>{session.spidersCleared=[...new Set([...(session.spidersCleared||[]),id])];this.hero.setAlpha(1);this.lastX=this.player.x;this.lastBottom=this.player.body.bottom;this.recordPosition();ui('playing');});
    this.trial=new FireflyTrial($('caught'),{active:()=>mode==='caught',onStep:()=>{},onComplete:()=>{ui('releasing');this.spiders.release();this.burst(this.player.x,this.player.y,24);}});
@@ -124,7 +124,7 @@ class Forest extends Phaser.Scene {
    this.setHero(frame,time);this.lastX=this.player.x;this.lastBottom=body.bottom;
    if(grounded&&Math.abs(body.velocity.x)>65&&time-this.stepAt>220){this.stepAt=time;}
    if(Math.abs(body.velocity.x)>60&&time-this.trailAt>100){this.burst(this.player.x-facing*20,this.player.y+15,1);this.trailAt=time;}
-   let near=null;for(const c of this.crystals){const d=Phaser.Math.Distance.Between(this.player.x,this.player.y,c.x,c.baseY);c.art.y=c.baseY+(reduced?0:Math.sin(time*.002+c.id)*6);c.art.setScale((40/this.metrics.assets.crystal.w)*(d<R.reach?1.13:1)*(1+.035*Math.sin(time*.003)),64/this.metrics.assets.crystal.h);if(d<R.reach)near=c;}
+   let near=null;for(const c of this.crystals){const d=Phaser.Math.Distance.Between(this.player.x,this.player.y,c.x,c.baseY);c.art.y=c.baseY+(reduced?0:Math.sin(time*.002+c.id)*6);c.art.setScale((44/this.metrics.assets.crystal.w)*(d<R.reach?1.13:1)*(1+.035*Math.sin(time*.003)),72/this.metrics.assets.crystal.h);if(d<R.reach)near=c;}
    $('hint').hidden=true;
    this.interact();
    if(mode==='playing')this.spiders.update(dt,body);
