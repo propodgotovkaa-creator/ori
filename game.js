@@ -1,33 +1,38 @@
-import {Homecoming} from './ending.js?v=9';
-import {crystalPlan,recycleCrystals} from './crystal-cycle.js?v=6';
-import {FireflyTrial} from './firefly.js?v=7';
+import {SETS,LABELS,wordArt} from './vocabulary.js?v=10';
+import {Homecoming} from './ending.js?v=10';
+import {crystalPlan,recycleCrystals} from './crystal-cycle.js?v=10';
+import {FireflyTrial} from './firefly.js?v=10';
 import {Spiders,touches} from './encounters.js?v=7';
-import {WORDS,RULES as R,newSession,validSession,collect,completeCard,chunkAt} from './core.js';
+import {WORDS,RULES as R,newSession,validSession,collect,completeCard,chunkAt} from './core.js?v=10';
 import {PANELS,PANEL_STEP,PANEL_WIDTH,panelAt,groundAt,connector,crystalsFor} from './scenery.js';
 const $=id=>document.getElementById(id);
 const STORE='forest-keeper-soft-v2';
 let saved=null;try{const s=JSON.parse(sessionStorage.getItem(STORE));if(validSession(s))saved=s;}catch{}
 let session=saved||newSession(),scene,mode='loading',resumeMode='playing';
 if(!saved){session.x=180;session.y=groundAt(session.x)-29;}
+session.position??='initial';let selectedPosition=session.position;
 const held=new Set();let facing=1;
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
 function save(){try{sessionStorage.setItem(STORE,JSON.stringify(session));}catch{}}
 function focusGame(){const canvas=document.querySelector('#game canvas');if(canvas){canvas.tabIndex=0;canvas.focus({preventScroll:true});}}
 function clearInput(){held.clear();if(scene){scene.jumpAt=-Infinity;scene.player?.body.setAccelerationX(0);scene.player?.body.setVelocityX(0);}}
 function ui(next){mode=next;clearInput();if(next==='playing')requestAnimationFrame(focusGame);for(const id of ['menu','card','paused','finish','caught'])$(id).hidden=id!==next;$('hud').hidden=['menu','loading','celebrating','finish'].includes(next);$('homecoming').hidden=!['celebrating','finish'].includes(next);$('touch').hidden=next!=='playing';$('hint').hidden=true;$('crystal-flight').hidden=!['revealing','card'].includes(next);$('crystal-flight').disabled=next!=='card';$('crystal-flight').classList.toggle('revealed',next==='card');if(scene){if(next==='playing'){scene.physics.resume();scene.tweens.resumeAll();}else{scene.physics.pause();if(next==='wrapping'||next==='caught'||next==='releasing')scene.tweens.resumeAll();else scene.tweens.pauseAll();}}}
-function count(){$('count').textContent=`${session.collected.length} / 11`;}
-function openCard(){ui('card');$('word').src=`assets/words/${session.deck[session.pending]}.png`;const ball=$('crystal-flight');ball.style.left='50%';ball.style.top='50%';ball.style.setProperty('--orb-size','36cqw');ball.style.opacity='1';ball.style.transform='translate(-50%,-50%)';ball.focus({preventScroll:true});}
+function count(){$('count').textContent=`${session.collected.length} / ${session.deck.length}`;}
+function showWord(id){const art=wordArt(id),el=$('word');el.style.backgroundImage=`url("${art.src}")`;el.style.backgroundSize=art.size;el.style.backgroundPosition=art.position;el.setAttribute('aria-label',LABELS[id]);}
+function renderPositions(){for(const b of document.querySelectorAll('.position-choice'))b.setAttribute('aria-pressed',String(b.dataset.position===selectedPosition));const set=SETS[selectedPosition];$('set-note').textContent=`${set.words.length} картинок · без спешки · вместе со взрослым`;const continuing=selectedPosition===session.position&&!session.finished&&(session.collected.length||session.x>180);$('start').textContent=continuing?'Продолжить путешествие':'Начать путешествие';$('fresh').hidden=!continuing;}
+for(const button of document.querySelectorAll('.position-choice'))button.onclick=()=>{selectedPosition=button.dataset.position;renderPositions();};
+function openCard(){ui('card');showWord(session.deck[session.pending]);const ball=$('crystal-flight');ball.style.left='50%';ball.style.top='50%';ball.style.setProperty('--orb-size','36cqw');ball.style.opacity='1';ball.style.transform='translate(-50%,-50%)';ball.focus({preventScroll:true});}
 
-function begin(fresh=false){if(fresh||session.finished){session=newSession();session.x=180;session.y=groundAt(180)-29;save();scene.scene.restart();return;}const phase=scene.spiders?.active?.phase;ui(({wrap:'wrapping',cocoon:'caught',release:'releasing'})[phase]||'playing');if(session.pending!==null)openCard();}
-function showMenu(){save();ui('menu');$('start').textContent=session.collected.length||session.x>180?'Продолжить путешествие':'Начать путешествие';$('fresh').hidden=!(session.collected.length||session.x>180);$('start').focus({preventScroll:true});}
+function begin(fresh=false){if(fresh||session.finished||selectedPosition!==session.position){session=newSession(undefined,selectedPosition);session.x=180;session.y=groundAt(180)-29;save();scene.scene.restart();return;}const phase=scene.spiders?.active?.phase;ui(({wrap:'wrapping',cocoon:'caught',release:'releasing'})[phase]||'playing');if(session.pending!==null)openCard();}
+function showMenu(){save();ui('menu');$('start').textContent=session.collected.length||session.x>180?'Продолжить путешествие':'Начать путешествие';$('fresh').hidden=!(session.collected.length||session.x>180);renderPositions();$('start').focus({preventScroll:true});}
 $('start').onclick=()=>begin();$('fresh').onclick=()=>begin(true);
 $('crystal-flight').onclick=()=>{if(mode!=='card')return;if(completeCard(session)){save();scene.celebrate();}else{save();ui('playing');}};
 $('pause').onclick=()=>{if(['playing','wrapping','caught','releasing','revealing'].includes(mode)){resumeMode=mode;scene.recordPosition();ui('paused');$('resume').focus();}};
 $('resume').onclick=()=>{ui(resumeMode);};
-$('back-menu').onclick=()=>showMenu();$('again').onclick=()=>begin(true);$('finish-menu').onclick=()=>{ui('menu');$('start').textContent='Новое путешествие';$('fresh').hidden=true;};
+$('back-menu').onclick=()=>showMenu();$('again').onclick=()=>begin(true);$('finish-menu').onclick=()=>showMenu();
 function action(key){if(mode!=='playing')return;if(key==='jump')scene.jumpAt=scene.time.now;}
-const keys={ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right',ArrowUp:'jump',KeyW:'jump',Space:'jump'};
-function inputKey(e){return keys[e.code]||keys[e.key]||({a:'left',d:'right',w:'jump',' ':'jump'})[e.key?.toLowerCase()];}
+const keys={ArrowUp:'jump',KeyW:'jump',Space:'jump'};
+function inputKey(e){return keys[e.code]||keys[e.key]||({w:'jump',' ':'jump'})[e.key?.toLowerCase()];}
 window.addEventListener('keydown',e=>{
  if(e.key==='Escape'&&['playing','wrapping','caught','releasing','revealing'].includes(mode)){$('pause').click();e.preventDefault();return;}
  if(e.key==='Escape'&&mode==='paused'){$('resume').click();e.preventDefault();return;}
@@ -36,7 +41,7 @@ window.addEventListener('keydown',e=>{
  if(new URLSearchParams(location.search).has('test'))$('stage').dataset.lastKey=`${e.key}:${e.code}`;
 },true);
 window.addEventListener('keyup',e=>{const k=inputKey(e);if(k){held.delete(k);if(mode==='playing')e.preventDefault();}},true);
-$('game').addEventListener('pointerdown',()=>{if(mode==='playing')focusGame();});
+$('game').addEventListener('pointerdown',e=>{if(mode==='playing'){e.preventDefault();focusGame();action('jump');}});
 for(const b of document.querySelectorAll('[data-action]')){const k=b.dataset.action;b.addEventListener('pointerdown',e=>{e.preventDefault();b.setPointerCapture(e.pointerId);focusGame();held.add(k);action(k);});for(const name of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(name,()=>held.delete(k));}
 function autoPause(){clearInput();if(['playing','wrapping','caught','releasing','revealing'].includes(mode)){$('pause').click();}}
 window.addEventListener('blur',autoPause);document.addEventListener('visibilitychange',()=>{if(document.hidden)autoPause();});window.addEventListener('pagehide',()=>{scene?.recordPosition();save();});
@@ -45,10 +50,11 @@ class Forest extends Phaser.Scene {
  constructor(){super('Forest');}
  preload(){scene=this;this.failed=[];this.load.on('progress',n=>$('progress').value=n);this.load.on('loaderror',file=>this.failed.push(file.key));
    this.load.image('spider','assets/spider/spider-v2.png');this.load.image('cocoon','assets/spider/cocoon.png');
-   this.load.image('hero','assets/character/hero.png');this.load.json('metrics','assets/metrics.json?v=7');
+   this.load.image('hero','assets/character/hero-v2.png');this.load.json('metrics','assets/metrics.json?v=10');
    PANELS.forEach((p,i)=>this.load.image(`panel${i}`,`assets/forest/soft/${p.file}.png`));
    this.load.image('root','assets/forest/soft/root.png');
    for(const [key,path] of Object.entries({tree:'forest/tree',ground:'platforms/ground',branch:'platforms/branch',crystal:'crystals/crystal-v3',flower:'effects/flower'}))this.load.image(key,`assets/${path}.png`);
+   for(const key of ['middle','final','cluster'])this.load.image(key+'Atlas',`assets/words/${key}-atlas.png`);
    for(const w of WORDS)this.load.image(w,`assets/words/${w}.png`);
  }
  create(){scene=this;if(this.failed.length){$('load-status').textContent='Не удалось загрузить часть игры. Проверьте соединение и обновите страницу.';console.error('Missing assets',this.failed);return;}
@@ -56,14 +62,14 @@ class Forest extends Phaser.Scene {
    for(const [key,b] of Object.entries(this.metrics.assets)){const t=this.textures.get(key);if(!t.has('trim'))t.add('trim',0,b.x,b.y,b.w,b.h);}
    const tex=this.textures.get('hero');this.metrics.hero.forEach((f,i)=>{if(!tex.has(String(i)))tex.add(String(i),0,f.x,f.y,f.w,f.h);});
    this.chunks=new Map();this.crystals=[];this.groundTime=-Infinity;this.jumpAt=-Infinity;this.landAt=-Infinity;this.stepAt=0;this.saveAt=0;this.trailAt=0;this.wasGrounded=false;this.nearId=null;
-   this.player=this.add.zone(session.x,session.y,32,53);this.physics.add.existing(this.player);this.player.body.setGravityY(0).setMaxVelocity(R.speed,1000).setDragX(1500);
-   this.hero=this.add.image(session.x,session.y,'hero','4').setDepth(5);
-   this.crystalPlan=crystalPlan(session.crystalPositions);
+   this.player=this.add.zone(session.x,session.y,32,53);this.physics.add.existing(this.player);this.player.body.setGravityY(0).setMaxVelocity(230,1000).setDragX(1500);
+   this.hero=this.add.image(session.x,session.y,'hero','4').setDepth(5);this.setHero(4,0);
+   this.crystalPlan=crystalPlan(session.crystalPositions,session.deck.length);
    this.recycleCrystals();
    for(const c of this.crystalPlan)if(!session.collected.includes(c.id)){const art=this.add.image(c.x,c.y,'crystal','trim').setDisplaySize(44,72).setDepth(4);this.crystals.push({id:c.id,x:c.x,baseY:c.y,art});}
    this.ensureChunks(panelAt(session.x));
    this.spiders=new Spiders(this,Array.isArray(session.spidersCleared)?session.spidersCleared:[],()=>{this.player.body.setVelocity(0,0).setAcceleration(0,0);ui('wrapping');},id=>{this.trial.reset(id);ui('caught');$('trail-status').focus({preventScroll:true});},id=>{session.spidersCleared=[...new Set([...(session.spidersCleared||[]),id])];this.hero.setAlpha(1);this.lastX=this.player.x;this.lastBottom=this.player.body.bottom;this.recordPosition();ui('playing');});
-   this.trial=new FireflyTrial($('caught'),{active:()=>mode==='caught',onStep:()=>{},onComplete:()=>{ui('releasing');this.spiders.release();this.burst(this.player.x,this.player.y,24);}});
+   this.trial=new FireflyTrial($('caught'),{syllables:SETS[session.position].syllables,active:()=>mode==='caught',onStep:()=>{},onComplete:()=>{ui('releasing');this.spiders.release();this.burst(this.player.x,this.player.y,24);}});
    this.cameras.main.setBounds(0,0,100000000,720);this.cameras.main.startFollow(this.player,true,.075,.075, -190,0);this.cameras.main.setDeadzone(75,720);this.cameras.main.scrollX=Math.max(0,session.x-450);
    this.checkpoint={x:session.x,y:session.y};this.lastX=session.x;this.lastBottom=session.y+26.5;this.grounded=false;
    this.motes=[];for(let i=0;i<(reduced?12:35);i++){const d=this.add.circle(Math.random()*1280,80+Math.random()*500,1+Math.random()*1.5,0xfff4b8,.65).setScrollFactor(0).setDepth(6);this.motes.push({d,x:d.x,y:d.y,phase:Math.random()*7});}
@@ -93,10 +99,10 @@ class Forest extends Phaser.Scene {
  recycleCrystals(){const moved=recycleCrystals(this.crystalPlan,session.collected,this.player.x,this.cameras.main.scrollX);for(const c of moved){const entry=this.crystals.find(v=>v.id===c.id);if(entry){entry.x=c.x;entry.baseY=c.y;entry.art.setPosition(c.x,c.y);}}if(moved.length){session.crystalPositions=Object.fromEntries(this.crystalPlan.map(c=>[c.id,c.x]));save();}}
  recordPosition(){if(!this.player)return;session.x=this.checkpoint?.x??140;session.y=this.checkpoint?.y??560;save();}
  interact(id){if(mode!=='playing')return;const c=this.crystals.find(c=>(id===undefined||id===c.id)&&touches(this.player.body,c.x,c.art.y));if(!c||!collect(session,c.id))return;this.burst(c.x,c.baseY,20);c.art.destroy();this.crystals=this.crystals.filter(v=>v!==c);count();this.recordPosition();this.revealCard(c.x,c.baseY);}
- revealCard(x,y){$('word').src=`assets/words/${session.deck[session.pending]}.png`;this.orb={x:(x-this.cameras.main.scrollX)/R.width*100,y:y/R.height*100,elapsed:0};ui('revealing');this.drawOrb(0);}
+ revealCard(x,y){showWord(session.deck[session.pending]);this.orb={x:(x-this.cameras.main.scrollX)/R.width*100,y:y/R.height*100,elapsed:0};ui('revealing');this.drawOrb(0);}
  drawOrb(ms){const o=this.orb;o.elapsed+=ms;const t=Math.min(1,Math.max(0,(o.elapsed-300)/850)),q=t*t*(3-2*t);const ball=$('crystal-flight');ball.style.left=(o.x+(50-o.x)*q)+'%';ball.style.top=(o.y+(50-o.y)*q-Math.sin(t*Math.PI)*12)+'%';ball.style.setProperty('--orb-size',(3+q*33)+'cqw');ball.style.opacity=String(Math.min(1,o.elapsed/160));ball.style.transform=`translate(-50%,-50%) scale(${.7+.3*Math.min(1,o.elapsed/300)})`;if(o.elapsed>=1350){this.orb=null;openCard();}}
  burst(x,y,n=8){if(reduced)n=Math.min(5,n);for(let i=0;i<n;i++){const d=this.add.circle(x,y,1+Math.random()*2,0xdffff5,.85).setDepth(8);this.tweens.add({targets:d,x:x+(Math.random()-.5)*110,y:y-15-Math.random()*75,alpha:0,scale:0,duration:650+Math.random()*450,onComplete:()=>d.destroy()});}}
- celebrate(){ui('celebrating');this.player.body.setVelocity(0,0).setAcceleration(0,0);this.homecoming.start();}
+ celebrate(){ui('celebrating');this.player.body.setVelocity(0,0).setAcceleration(0,0);this.homecoming.start(session.deck.length);}
  update(time,delta){if(!this.player)return;const dt=Math.min(delta,32)/1000;const cam=this.cameras.main.scrollX;
    if(mode==='celebrating'||mode==='finish'){this.homecoming.tick(dt*1000);return;}
    if(mode==='revealing'){this.drawOrb(dt*1000);return;}
@@ -116,9 +122,8 @@ class Forest extends Phaser.Scene {
    }
    if(grounded){this.groundTime=time;if(!wasGrounded){this.landAt=time;this.burst(this.player.x,floor,5);}this.checkpoint={x:this.player.x,y:this.player.y-2};}
    this.grounded=grounded;this.wasGrounded=grounded;
-   const direction=(held.has('right')?1:0)-(held.has('left')?1:0);body.setAccelerationX(direction*1700);if(direction)facing=direction;
+   const direction=1;body.setAccelerationX(1400);facing=1;
    if(time-this.jumpAt<R.buffer&&time-this.groundTime<R.coyote){body.setVelocityY(-R.jump);this.jumpAt=-Infinity;this.groundTime=-Infinity;this.wasGrounded=false;this.grounded=false;}
-   if(!held.has('jump')&&body.velocity.y<-250)body.setVelocityY(body.velocity.y+R.gravity*dt*.85);
    if(this.player.x<35){body.reset(35,this.player.y);}
    if(this.player.y>840){body.reset(this.checkpoint.x,this.checkpoint.y-8);this.burst(this.player.x,this.player.y,12);this.cameras.main.scrollX=Math.max(0,this.player.x-450);}
    this.ensureChunks(panelAt(this.player.x));this.recycleCrystals();
@@ -133,7 +138,7 @@ class Forest extends Phaser.Scene {
    this.interact();
    if(mode==='playing')this.spiders.update(dt,body);
  }
- setHero(frame,time){const f=this.metrics.hero[frame];this.hero.setFrame(String(frame));const scale=96/this.metrics.hero[4].w;this.hero.setScale(scale,scale*(frame===4?1+Math.sin(time*.003)*.014:1));this.hero.setFlipX(facing<0);this.hero.setOrigin(facing>0?.65:.35,1);this.hero.x=this.player.x;this.hero.y=this.player.body.bottom+3;}
+ setHero(frame,time){const f=this.metrics.hero[frame];this.hero.setFrame(String(frame));const scale=104/this.metrics.hero[4].w;this.hero.setScale(scale,scale*(frame===4?1+Math.sin(time*.003)*.014:1));this.hero.setFlipX(facing<0);this.hero.setOrigin(facing>0?.65:.35,1);this.hero.x=this.player.x;this.hero.y=this.player.body.bottom+3;}
 }
-const game=new Phaser.Game({type:Phaser.AUTO,parent:'game',width:R.width,height:R.height,backgroundColor:'#84bdd1',transparent:false,render:{antialias:true,roundPixels:false},scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH},physics:{default:'arcade',arcade:{gravity:{y:R.gravity},debug:false}},audio:{noAudio:true},input:{activePointers:3},scene:[Forest]});
+const game=new Phaser.Game({type:Phaser.AUTO,parent:'game',width:R.width,height:R.height,backgroundColor:'#84bdd1',transparent:false,resolution:Math.min(window.devicePixelRatio||1,2),render:{antialias:true,roundPixels:false},scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH},physics:{default:'arcade',arcade:{gravity:{y:R.gravity},debug:false}},audio:{noAudio:true},input:{activePointers:3},scene:[Forest]});
 window.addEventListener('error',()=>{if(mode==='loading')$('load-status').textContent='Не удалось открыть лес. Обновите страницу или попробуйте другой браузер.';});
