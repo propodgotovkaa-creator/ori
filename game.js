@@ -31,8 +31,8 @@ $('pause').onclick=()=>{if(['playing','wrapping','caught','releasing','revealing
 $('resume').onclick=()=>{ui(resumeMode);};
 $('back-menu').onclick=()=>showMenu();$('again').onclick=()=>begin(true);$('finish-menu').onclick=()=>showMenu();
 function action(key){if(mode!=='playing')return;if(key==='jump')scene.jumpAt=scene.time.now;}
-const keys={ArrowUp:'jump',KeyW:'jump',Space:'jump'};
-function inputKey(e){return keys[e.code]||keys[e.key]||({w:'jump',' ':'jump'})[e.key?.toLowerCase()];}
+const keys={ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right',ArrowUp:'jump',KeyW:'jump',Space:'jump'};
+function inputKey(e){return keys[e.code]||keys[e.key]||({a:'left',d:'right',w:'jump',' ':'jump'})[e.key?.toLowerCase()];}
 window.addEventListener('keydown',e=>{
  if(e.key==='Escape'&&['playing','wrapping','caught','releasing','revealing'].includes(mode)){$('pause').click();e.preventDefault();return;}
  if(e.key==='Escape'&&mode==='paused'){$('resume').click();e.preventDefault();return;}
@@ -41,8 +41,8 @@ window.addEventListener('keydown',e=>{
  if(new URLSearchParams(location.search).has('test'))$('stage').dataset.lastKey=`${e.key}:${e.code}`;
 },true);
 window.addEventListener('keyup',e=>{const k=inputKey(e);if(k){held.delete(k);if(mode==='playing')e.preventDefault();}},true);
-$('game').addEventListener('pointerdown',e=>{if(mode==='playing'){e.preventDefault();focusGame();action('jump');}});
-for(const b of document.querySelectorAll('[data-action]')){const k=b.dataset.action;b.addEventListener('pointerdown',e=>{e.preventDefault();b.setPointerCapture(e.pointerId);focusGame();held.add(k);action(k);});for(const name of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(name,()=>held.delete(k));}
+$('game').addEventListener('pointerdown',()=>{if(mode==='playing')focusGame();});
+for(const b of document.querySelectorAll('[data-action]')){const k=b.dataset.action;b.addEventListener('pointerdown',e=>{if(mode!=='playing')return;e.preventDefault();b.setPointerCapture(e.pointerId);focusGame();held.add(k);action(k);});for(const name of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(name,()=>held.delete(k));}
 function autoPause(){clearInput();if(['playing','wrapping','caught','releasing','revealing'].includes(mode)){$('pause').click();}}
 window.addEventListener('blur',autoPause);document.addEventListener('visibilitychange',()=>{if(document.hidden)autoPause();});window.addEventListener('pagehide',()=>{scene?.recordPosition();save();});
 
@@ -62,7 +62,7 @@ class Forest extends Phaser.Scene {
    for(const [key,b] of Object.entries(this.metrics.assets)){const t=this.textures.get(key);if(!t.has('trim'))t.add('trim',0,b.x,b.y,b.w,b.h);}
    const tex=this.textures.get('hero');this.metrics.hero.forEach((f,i)=>{if(!tex.has(String(i)))tex.add(String(i),0,f.x,f.y,f.w,f.h);});
    this.chunks=new Map();this.crystals=[];this.groundTime=-Infinity;this.jumpAt=-Infinity;this.landAt=-Infinity;this.stepAt=0;this.saveAt=0;this.trailAt=0;this.wasGrounded=false;this.nearId=null;
-   this.player=this.add.zone(session.x,session.y,32,53);this.physics.add.existing(this.player);this.player.body.setGravityY(0).setMaxVelocity(230,1000).setDragX(1500);
+   this.player=this.add.zone(session.x,session.y,32,53);this.physics.add.existing(this.player);this.player.body.setGravityY(0).setMaxVelocity(R.speed,1000).setDragX(1500);
    this.hero=this.add.image(session.x,session.y,'hero','4').setDepth(5);this.setHero(4,0);
    this.crystalPlan=crystalPlan(session.crystalPositions,session.deck.length);
    this.recycleCrystals();
@@ -122,7 +122,7 @@ class Forest extends Phaser.Scene {
    }
    if(grounded){this.groundTime=time;if(!wasGrounded){this.landAt=time;this.burst(this.player.x,floor,5);}this.checkpoint={x:this.player.x,y:this.player.y-2};}
    this.grounded=grounded;this.wasGrounded=grounded;
-   const direction=1;body.setAccelerationX(1400);facing=1;
+   const direction=(held.has('right')?1:0)-(held.has('left')?1:0);body.setAccelerationX(direction*1700);if(direction)facing=direction;
    if(time-this.jumpAt<R.buffer&&time-this.groundTime<R.coyote){body.setVelocityY(-R.jump);this.jumpAt=-Infinity;this.groundTime=-Infinity;this.wasGrounded=false;this.grounded=false;}
    if(this.player.x<35){body.reset(35,this.player.y);}
    if(this.player.y>840){body.reset(this.checkpoint.x,this.checkpoint.y-8);this.burst(this.player.x,this.player.y,12);this.cameras.main.scrollX=Math.max(0,this.player.x-450);}
