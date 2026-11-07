@@ -1,6 +1,6 @@
 import {SETS,LABELS,wordArt} from './vocabulary.js?v=10';
 import {Homecoming} from './ending.js?v=10';
-import {crystalPlan,recycleCrystals} from './crystal-cycle.js?v=10';
+import {crystalPlan,recycleCrystals} from './crystal-cycle.js?v=13';
 import {FireflyTrial} from './firefly.js?v=10';
 import {Spiders,touches} from './encounters.js?v=7';
 import {WORDS,RULES as R,newSession,validSession,collect,completeCard,chunkAt} from './core.js?v=10';
@@ -19,7 +19,7 @@ function clearInput(){held.clear();if(scene){scene.jumpAt=-Infinity;scene.player
 function ui(next){mode=next;clearInput();if(next==='playing')requestAnimationFrame(focusGame);for(const id of ['menu','card','paused','finish','caught'])$(id).hidden=id!==next;$('hud').hidden=['menu','loading','celebrating','finish'].includes(next);$('homecoming').hidden=!['celebrating','finish'].includes(next);$('touch').hidden=next!=='playing';$('hint').hidden=true;$('crystal-flight').hidden=!['revealing','card'].includes(next);$('crystal-flight').disabled=next!=='card';$('crystal-flight').classList.toggle('revealed',next==='card');if(scene){if(next==='playing'){scene.physics.resume();scene.tweens.resumeAll();}else{scene.physics.pause();if(next==='wrapping'||next==='caught'||next==='releasing')scene.tweens.resumeAll();else scene.tweens.pauseAll();}}}
 function count(){$('count').textContent=`${session.collected.length} / ${session.deck.length}`;}
 function showWord(id){const art=wordArt(id),el=$('word');el.style.backgroundImage=`url("${art.src}")`;el.style.backgroundSize=art.size;el.style.backgroundPosition=art.position;el.setAttribute('aria-label',LABELS[id]);}
-function renderPositions(){for(const b of document.querySelectorAll('.position-choice'))b.setAttribute('aria-pressed',String(b.dataset.position===selectedPosition));const set=SETS[selectedPosition];$('set-note').textContent=`${set.words.length} картинок · без спешки · вместе со взрослым`;const continuing=selectedPosition===session.position&&!session.finished&&(session.collected.length||session.x>180);$('start').textContent=continuing?'Продолжить путешествие':'Начать путешествие';$('fresh').hidden=!continuing;}
+function renderPositions(){for(const b of document.querySelectorAll('.position-choice'))b.setAttribute('aria-pressed',String(b.dataset.position===selectedPosition));const set=SETS[selectedPosition];$('set-note').textContent=`${set.words.length} картинок`;const continuing=selectedPosition===session.position&&!session.finished&&(session.collected.length||session.x>180);$('start').textContent=continuing?'Продолжить путешествие':'Начать путешествие';$('fresh').hidden=!continuing;}
 for(const button of document.querySelectorAll('.position-choice'))button.onclick=()=>{selectedPosition=button.dataset.position;renderPositions();};
 function openCard(){ui('card');showWord(session.deck[session.pending]);const ball=$('crystal-flight');ball.style.left='50%';ball.style.top='50%';ball.style.setProperty('--orb-size','36cqw');ball.style.opacity='1';ball.style.transform='translate(-50%,-50%)';ball.focus({preventScroll:true});}
 
@@ -64,11 +64,11 @@ class Forest extends Phaser.Scene {
    this.chunks=new Map();this.crystals=[];this.groundTime=-Infinity;this.jumpAt=-Infinity;this.landAt=-Infinity;this.stepAt=0;this.saveAt=0;this.trailAt=0;this.wasGrounded=false;this.nearId=null;
    this.player=this.add.zone(session.x,session.y,32,53);this.physics.add.existing(this.player);this.player.body.setGravityY(0).setMaxVelocity(R.speed,1000).setDragX(1500);
    this.hero=this.add.image(session.x,session.y,'hero','4').setDepth(5);this.setHero(4,0);
-   this.crystalPlan=crystalPlan(session.crystalPositions,session.deck.length);
+   this.crystalPlan=crystalPlan(session.crystalPositions,session.deck.length,session.seed);
    this.recycleCrystals();
    for(const c of this.crystalPlan)if(!session.collected.includes(c.id)){const art=this.add.image(c.x,c.y,'crystal','trim').setDisplaySize(44,72).setDepth(4);this.crystals.push({id:c.id,x:c.x,baseY:c.y,art});}
    this.ensureChunks(panelAt(session.x));
-   this.spiders=new Spiders(this,Array.isArray(session.spidersCleared)?session.spidersCleared:[],()=>{this.player.body.setVelocity(0,0).setAcceleration(0,0);ui('wrapping');},id=>{this.trial.reset(id);ui('caught');$('trail-status').focus({preventScroll:true});},id=>{session.spidersCleared=[...new Set([...(session.spidersCleared||[]),id])];this.hero.setAlpha(1);this.lastX=this.player.x;this.lastBottom=this.player.body.bottom;this.recordPosition();ui('playing');});
+   this.spiders=new Spiders(this,Array.isArray(session.spidersCleared)?session.spidersCleared:[],()=>{this.player.body.setVelocity(0,0).setAcceleration(0,0);ui('wrapping');},id=>{this.trial.reset((session.spidersCleared||[]).length);ui('caught');$('trail-status').focus({preventScroll:true});},id=>{session.spidersCleared=[...new Set([...(session.spidersCleared||[]),id])];this.hero.setAlpha(1);this.lastX=this.player.x;this.lastBottom=this.player.body.bottom;this.recordPosition();ui('playing');});
    this.trial=new FireflyTrial($('caught'),{syllables:SETS[session.position].syllables,active:()=>mode==='caught',onStep:()=>{},onComplete:()=>{ui('releasing');this.spiders.release();this.burst(this.player.x,this.player.y,24);}});
    this.cameras.main.setBounds(0,0,100000000,720);this.cameras.main.startFollow(this.player,true,.075,.075, -190,0);this.cameras.main.setDeadzone(75,720);this.cameras.main.scrollX=Math.max(0,session.x-450);
    this.checkpoint={x:session.x,y:session.y};this.lastX=session.x;this.lastBottom=session.y+26.5;this.grounded=false;
