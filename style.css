@@ -37,3 +37,5 @@
 @media(prefers-reduced-motion:reduce){#touch button{transition:none}}
 
 #touch{left:auto;right:2.6cqw}
+
+#loading{background:#193f3a url('assets/forest/soft/01-jade.png') center/cover no-repeat}#load-status:empty{display:none}#load-status:not(:empty){max-width:70%;padding:2cqh 3cqw;border-radius:1cqw;background:#153b36e8;color:#fff9e9;font-size:2.3cqh}

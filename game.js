@@ -48,7 +48,7 @@ window.addEventListener('blur',autoPause);document.addEventListener('visibilityc
 
 class Forest extends Phaser.Scene {
  constructor(){super('Forest');}
- preload(){scene=this;this.failed=[];this.load.on('progress',n=>$('progress').value=n);this.load.on('loaderror',file=>this.failed.push(file.key));
+ preload(){scene=this;this.failed=[];this.load.on('loaderror',file=>this.failed.push(file.key));
    this.load.image('spider','assets/spider/spider-v2.png');this.load.image('cocoon','assets/spider/cocoon.png');
    this.load.image('hero','assets/character/hero-v2.png');this.load.json('metrics','assets/metrics.json?v=10');
    PANELS.forEach((p,i)=>this.load.image(`panel${i}`,`assets/forest/soft/${p.file}.png`));
