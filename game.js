@@ -1,6 +1,6 @@
 import {SETS,LABELS,wordArt} from './vocabulary.js?v=10';
 import {Homecoming} from './ending.js?v=10';
-import {crystalPlan,recycleCrystals} from './crystal-cycle.js?v=13';
+import {crystalPlan,recycleCrystals,nextLayoutSeed} from './crystal-cycle.js?v=15';
 import {FireflyTrial} from './firefly.js?v=10';
 import {Spiders,touches} from './encounters.js?v=7';
 import {WORDS,RULES as R,newSession,validSession,collect,completeCard,chunkAt} from './core.js?v=10';
@@ -23,7 +23,7 @@ function renderPositions(){for(const b of document.querySelectorAll('.position-c
 for(const button of document.querySelectorAll('.position-choice'))button.onclick=()=>{selectedPosition=button.dataset.position;renderPositions();};
 function openCard(){ui('card');showWord(session.deck[session.pending]);const ball=$('crystal-flight');ball.style.left='50%';ball.style.top='50%';ball.style.setProperty('--orb-size','36cqw');ball.style.opacity='1';ball.style.transform='translate(-50%,-50%)';ball.focus({preventScroll:true});}
 
-function begin(fresh=false){if(fresh||session.finished||selectedPosition!==session.position){session=newSession(undefined,selectedPosition);session.x=180;session.y=groundAt(180)-29;save();scene.scene.restart();return;}const phase=scene.spiders?.active?.phase;ui(({wrap:'wrapping',cocoon:'caught',release:'releasing'})[phase]||'playing');if(session.pending!==null)openCard();}
+function begin(fresh=false){if(fresh||session.finished||selectedPosition!==session.position){session=newSession(nextLayoutSeed(session.seed,SETS[selectedPosition].words.length),selectedPosition);session.x=180;session.y=groundAt(180)-29;save();scene.scene.restart();return;}const phase=scene.spiders?.active?.phase;ui(({wrap:'wrapping',cocoon:'caught',release:'releasing'})[phase]||'playing');if(session.pending!==null)openCard();}
 function showMenu(){save();ui('menu');$('start').textContent=session.collected.length||session.x>180?'Продолжить путешествие':'Начать путешествие';$('fresh').hidden=!(session.collected.length||session.x>180);renderPositions();$('start').focus({preventScroll:true});}
 $('start').onclick=()=>begin();$('fresh').onclick=()=>begin(true);
 $('crystal-flight').onclick=()=>{if(mode!=='card')return;if(completeCard(session)){save();scene.celebrate();}else{save();ui('playing');}};
